@@ -1,92 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCR Upload</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="style.css">
+<title>OCR Upload</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
-<div class="layout">
+<div class="main">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
+    <h1>Upload Rewards Report</h1>
 
-        <div class="logo">OCR Tool</div>
+    <div class="card">
 
-        <nav>
-            <a href="dashboard.html">Dashboard</a>
-            <a href="employees.html">Employees</a>
-            <a href="reports.html">Reports</a>
-        </nav>
+        <input
+            type="file"
+            id="imageInput"
+            accept="image/*"
+        >
 
-        <button id="logoutBtn">Logout</button>
+        <button id="scanBtn" class="btn-primary">
+            Scan Report
+        </button>
 
-    </aside>
+    </div>
 
-    <!-- MAIN -->
-    <main class="main">
+    <div class="card">
 
-        <header class="header">
-            <h1>OCR Upload</h1>
-            <p class="subtext">
-                Upload register printout to extract performance data
-            </p>
-        </header>
+        <h2>Detected Date</h2>
 
-        <!-- UPLOAD CARD -->
-        <section class="card">
+        <input
+            type="date"
+            id="reportDate"
+        >
 
-            <h2>Upload Image</h2>
+    </div>
 
-            <p class="subtext">
-                Take a photo of the printed report or upload a screenshot
-            </p>
+    <div class="card">
 
-            <input
-                type="file"
-                id="imageInput"
-                accept="image/*"
-            >
+        <h2>Detected Employees</h2>
 
-            <br><br>
+        <table>
 
-            <button id="runOCR">
-                Process Image
-            </button>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Transactions</th>
+                    <th>Rewards</th>
+                    <th>%</th>
+                </tr>
+            </thead>
 
-        </section>
+            <tbody id="resultsBody"></tbody>
 
-        <!-- INFO CARD -->
-        <section class="card">
+        </table>
 
-            <h2>How it works</h2>
+    </div>
 
-            <p>
-                1. Upload report image<br>
-                2. OCR extracts text<br>
-                3. System parses employee data<br>
-                4. You review before saving<br>
-                5. Data is added to reports
-            </p>
+    <div class="card">
 
-        </section>
+        <button
+            id="saveBtn"
+            class="btn-primary"
+        >
+            Save Reports
+        </button>
 
-    </main>
+    </div>
 
 </div>
 
 <script src="ocr.js"></script>
-<div class="mobile-nav">
-    <a href="dashboard.html">📊<span>Dashboard</span></a>
-    <a href="reports.html">📝<span>Reports</span></a>
-    <a href="employees.html">👥<span>Employees</span></a>
-    <a href="ocr.html">📷<span>Upload</span></a>
-</div>
 
 </body>
 </html>
