@@ -54,6 +54,40 @@ scanBtn.addEventListener("click", async () => {
                 -img.width / 2,
                 -img.height / 2
             );
+            
+            const imageData =
+    ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+const data =
+    imageData.data;
+
+for (let i = 0; i < data.length; i += 4) {
+
+    const avg =
+        (
+            data[i] +
+            data[i + 1] +
+            data[i + 2]
+        ) / 3;
+
+    const value =
+        avg > 180 ? 255 : 0;
+
+    data[i] = value;
+    data[i + 1] = value;
+    data[i + 2] = value;
+}
+
+ctx.putImageData(
+    imageData,
+    0,
+    0
+);
 
             const result =
                 await Tesseract.recognize(
