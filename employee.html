@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Profile</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">Rewards Tracker</div>
+
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="employees.html">Employees</a>
+            <a href="reports.html">Reports</a>
+            <a href="employee.html" class="active">Employee Profile</a>
+        </nav>
+
+        <button id="logoutBtn">Logout</button>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <header class="header">
+            <h1 id="employeeNameTitle">Employee Profile</h1>
+            <p class="subtext">Performance breakdown</p>
+        </header>
+
+        <!-- SELECT EMPLOYEE -->
+        <section class="card">
+
+            <h2>Select Employee</h2>
+
+            <select id="employeeSelect">
+                <option value="">Select Employee</option>
+            </select>
+
+        </section>
+
+        <!-- STATS -->
+        <section class="stats">
+
+            <div class="stat-card">
+                <h3>Average</h3>
+                <p id="avgPercent">0%</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total Reports</h3>
+                <p id="totalReports">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Best Day</h3>
+                <p id="bestDay">0%</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Worst Day</h3>
+                <p id="worstDay">0%</p>
+            </div>
+
+        </section>
+
+        <!-- CHART -->
+        <section class="card">
+
+            <h2>Performance Trend</h2>
+            <canvas id="trendChart"></canvas>
+
+        </section>
+
+        <!-- TABLE -->
+        <section class="card">
+
+            <h2>All Reports</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Transactions</th>
+                        <th>Rewards</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+
+                <tbody id="reportTable"></tbody>
+
+            </table>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="employee.js"></script>
+
+</body>
+</html>

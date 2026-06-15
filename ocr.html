@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Upload</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">OCR Tool</div>
+
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="employees.html">Employees</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+
+        <button id="logoutBtn">Logout</button>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <header class="header">
+            <h1>OCR Upload</h1>
+            <p class="subtext">
+                Upload register printout to extract performance data
+            </p>
+        </header>
+
+        <!-- UPLOAD CARD -->
+        <section class="card">
+
+            <h2>Upload Image</h2>
+
+            <p class="subtext">
+                Take a photo of the printed report or upload a screenshot
+            </p>
+
+            <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+            >
+
+            <br><br>
+
+            <button id="runOCR">
+                Process Image
+            </button>
+
+        </section>
+
+        <!-- INFO CARD -->
+        <section class="card">
+
+            <h2>How it works</h2>
+
+            <p>
+                1. Upload report image<br>
+                2. OCR extracts text<br>
+                3. System parses employee data<br>
+                4. You review before saving<br>
+                5. Data is added to reports
+            </p>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="ocr.js"></script>
+
+</body>
+</html>

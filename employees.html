@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employees</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            Rewards Tracker
+        </div>
+
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="employees.html" class="active">Employees</a>
+            <a href="reports.html">Reports</a>
+            <a href="employee.html">Employee Profile</a>
+        </nav>
+
+        <button id="logoutBtn">Logout</button>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <header class="header">
+            <h1>Employees</h1>
+            <p class="subtext">Manage store team members</p>
+        </header>
+
+        <!-- ADD EMPLOYEE -->
+        <section class="card">
+
+            <h2>Add Employee</h2>
+
+            <input
+                type="text"
+                id="employeeName"
+                placeholder="Enter employee name"
+            />
+
+            <button id="addEmployeeBtn">
+                Add Employee
+            </button>
+
+        </section>
+
+        <!-- EMPLOYEE LIST -->
+        <section class="card">
+
+            <h2>Employee List</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="employeeTable"></tbody>
+
+            </table>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="employees.js"></script>
+
+</body>
+</html>

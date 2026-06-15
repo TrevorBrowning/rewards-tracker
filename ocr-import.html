@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OCR Import Review</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .review-table input {
+            width: 80px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <div class="logo">OCR Import</div>
+
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="reports.html">Reports</a>
+        </nav>
+
+        <button id="logoutBtn">Logout</button>
+
+    </aside>
+
+    <main class="main">
+
+        <div class="container">
+
+            <h1>OCR Import Review</h1>
+
+            <p class="subtext">
+                Review parsed data before saving
+            </p>
+
+            <div class="card">
+
+                <label>Select Date for This Import:</label>
+                <input type="date" id="importDate">
+
+            </div>
+
+            <div class="card">
+
+                <h2>Parsed Data</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Transactions</th>
+                            <th>Rewards</th>
+                            <th>%</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="reviewTable"></tbody>
+
+                </table>
+
+                <button id="saveImportBtn">
+                    Save to Reports
+                </button>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="ocr-import.js"></script>
+
+</body>
+</html>
