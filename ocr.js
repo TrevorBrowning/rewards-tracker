@@ -1,122 +1,205 @@
+const imageInput =
+document.getElementById("imageInput");
 
+const scanBtn =
+document.getElementById("scanBtn");
 
+const saveBtn =
+document.getElementById("saveBtn");
 
+const resultsBody =
+document.getElementById("resultsBody");
 
-document.getElementById("runOCR")
-.addEventListener("click", async () => {
+const reportDate =
+document.getElementById("reportDate");
+
+let importedRows = [];
+
+scanBtn.addEventListener("click", async () => {
 
     const file =
-        document.getElementById("imageInput").files[0];
+    imageInput.files[0];
 
     if (!file) {
-        alert("Please upload an image first");
+        alert("Select an image first.");
         return;
     }
 
-    
-    
-    
+    scanBtn.disabled = true;
+    scanBtn.textContent = "Scanning...";
+
     const result =
-        await Tesseract.recognize(
-            file,
-            "eng",
-            {
-                logger: m => console.log(m)
-            }
-        );
-
-    const text =
-        result.data.text;
-
-    console.log("RAW OCR TEXT:", text);
-
-    
-    
-    
-    const parsed =
-        parseOCR(text);
-
-    console.log("PARSED DATA:", parsed);
-
-    if (parsed.length === 0) {
-        alert("No valid rows detected. Check format.");
-        return;
-    }
-
-    
-    
-    
-    localStorage.setItem(
-        "ocrParsed",
-        JSON.stringify(parsed)
+    await Tesseract.recognize(
+        file,
+        "eng"
     );
 
-    
-    
-    
-    window.location.href = "ocr-import.html";
+    const text =
+    result.data.text;
+
+    console.log(text);
+
+    parseReport(text);
+
+    scanBtn.disabled = false;
+    scanBtn.textContent = "Scan Report";
 
 });
 
+function parseReport(text) {
 
+    importedRows = [];
 
+    resultsBody.innerHTML = "";
 
-function parseOCR(text) {
+    // --------------------
+    // DATE
+    // --------------------
+
+    const dateMatch =
+    text.match(
+        /(\d{1,2}\/\d{1,2}\/\d{4})/
+    );
+
+    if (dateMatch) {
+
+        const parts =
+        dateMatch[1].split("/");
+
+        reportDate.value =
+        `${parts[2]}-${parts[0].padStart(2,"0")}-${parts[1].padStart(2,"0")}`;
+
+    }
+
+    // --------------------
+    // EMPLOYEE ROWS
+    // --------------------
 
     const lines =
-        text.split("\n")
-            .map(l => l.trim())
-            .filter(Boolean);
-
-    const results = [];
+    text.split("\n");
 
     lines.forEach(line => {
 
-        
-        if (line.length < 5) return;
+        const cleaned =
+        line.trim();
 
-        const parts =
-            line.split(/\s+/); 
+        if (!cleaned) return;
 
-        if (parts.length < 3) return;
-
-        
-        let percentRaw =
-            parts[parts.length - 1];
-
-        let rewards =
-            parseInt(parts[parts.length - 2]);
-
-        let transactions =
-            parseInt(parts[parts.length - 3]);
-
-        let name =
-            parts.slice(0, parts.length - 3)
-                .join(" ");
-
-        
-        let percent =
-            parseFloat(
-                percentRaw.replace("%", "")
-            );
-
-        
         if (
-            !name ||
-            isNaN(transactions) ||
-            isNaN(rewards)
+            cleaned.includes("Total") ||
+            cleaned.includes("Cashier") ||
+            cleaned.includes("Oracle") ||
+            cleaned.includes("Rewards") ||
+            cleaned.includes("Transaction") ||
+            cleaned.includes("Display")
         ) {
             return;
         }
 
-        results.push({
-            name: name.trim(),
+        const match =
+        cleaned.match(
+            /^([A-Za-z\s]+?)\s+(\d+)\s+(\d+)/
+        );
+
+        if (!match) return;
+
+        const employee =
+        match[1].trim();
+
+        const transactions =
+        parseInt(match[2]);
+
+        const rewards =
+        parseInt(match[3]);
+
+        if (
+            employee.length < 3 ||
+            employee === "Total"
+        ) {
+            return;
+        }
+
+        const percent =
+        transactions === 0
+            ? 0
+            : (
+                rewards /
+                transactions *
+                100
+            ).toFixed(1);
+
+        importedRows.push({
+            employee,
             transactions,
             rewards,
-            percent: isNaN(percent) ? 0 : percent
+            percent
         });
 
     });
 
-    return results;
+    renderResults();
+
 }
+
+function renderResults() {
+
+    resultsBody.innerHTML = "";
+
+    importedRows.forEach(row => {
+
+        const tr =
+        document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${row.employee}</td>
+            <td>${row.transactions}</td>
+            <td>${row.rewards}</td>
+            <td>${row.percent}%</td>
+        `;
+
+        resultsBody.appendChild(tr);
+
+    });
+
+}
+
+saveBtn.addEventListener("click", () => {
+
+    const reports =
+    JSON.parse(
+        localStorage.getItem("reports")
+    ) || [];
+
+    importedRows.forEach(row => {
+
+        reports.push({
+
+            employee:
+            row.employee,
+
+            transactions:
+            row.transactions,
+
+            rewards:
+            row.rewards,
+
+            date:
+            reportDate.value
+
+        });
+
+    });
+
+    localStorage.setItem(
+        "reports",
+        JSON.stringify(reports)
+    );
+
+    alert(
+        `${importedRows.length} reports imported successfully`
+    );
+
+    window.location.href =
+    "dashboard.html";
+
+});
