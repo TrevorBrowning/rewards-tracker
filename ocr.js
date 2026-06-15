@@ -17,8 +17,7 @@ let importedRows = [];
 
 scanBtn.addEventListener("click", async () => {
 
-    const file =
-    imageInput.files[0];
+    const file = imageInput.files[0];
 
     if (!file) {
         alert("Select an image first.");
@@ -28,21 +27,65 @@ scanBtn.addEventListener("click", async () => {
     scanBtn.disabled = true;
     scanBtn.textContent = "Scanning...";
 
-    const result =
-    await Tesseract.recognize(
-        file,
-        "eng"
-    );
+    const img = new Image();
 
-    const text =
-    result.data.text;
+    img.onload = async () => {
 
-    console.log(text);
+        try {
 
-    parseReport(text);
+            const canvas =
+                document.createElement("canvas");
 
-    scanBtn.disabled = false;
-    scanBtn.textContent = "Scan Report";
+            const ctx =
+                canvas.getContext("2d");
+
+            canvas.width = img.height;
+            canvas.height = img.width;
+
+            ctx.translate(
+                canvas.width / 2,
+                canvas.height / 2
+            );
+
+            ctx.rotate(Math.PI / 2);
+
+            ctx.drawImage(
+                img,
+                -img.width / 2,
+                -img.height / 2
+            );
+
+            const result =
+                await Tesseract.recognize(
+                    canvas,
+                    "eng"
+                );
+
+            const text =
+                result.data.text;
+
+            console.log("OCR RESULT:");
+            console.log(text);
+
+            parseReport(text);
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert(
+                "OCR failed. Check console."
+            );
+
+        }
+
+        scanBtn.disabled = false;
+        scanBtn.textContent = "Scan Report";
+
+    };
+
+    img.src =
+        URL.createObjectURL(file);
 
 });
 
@@ -52,87 +95,82 @@ function parseReport(text) {
 
     resultsBody.innerHTML = "";
 
-    // --------------------
-    // DATE
-    // --------------------
+    let debug =
+        document.getElementById("ocrDebug");
 
-    const dateMatch =
-    text.match(
-        /(\d{1,2}\/\d{1,2}\/\d{4})/
-    );
+    if (!debug) {
 
-    if (dateMatch) {
+        debug =
+            document.createElement("textarea");
 
-        const parts =
-        dateMatch[1].split("/");
+        debug.id = "ocrDebug";
 
-        reportDate.value =
-        `${parts[2]}-${parts[0].padStart(2,"0")}-${parts[1].padStart(2,"0")}`;
+        debug.style.width = "100%";
+        debug.style.height = "250px";
+        debug.style.marginTop = "20px";
+
+        document.body.appendChild(debug);
 
     }
 
-    // --------------------
-    // EMPLOYEE ROWS
-    // --------------------
+    debug.value = text;
+
+    const dateMatches =
+        text.match(/\d{1,2}\/\d{1,2}\/\d{4}/g);
+
+    if (dateMatches && dateMatches.length) {
+
+        const parts =
+            dateMatches[0].split("/");
+
+        reportDate.value =
+            `${parts[2]}-${parts[0].padStart(2,"0")}-${parts[1].padStart(2,"0")}`;
+
+    }
 
     const lines =
-    text.split("\n");
+        text
+        .split("\n")
+        .map(x => x.trim())
+        .filter(x => x.length);
 
     lines.forEach(line => {
 
-        const cleaned =
-        line.trim();
-
-        if (!cleaned) return;
-
-        if (
-            cleaned.includes("Total") ||
-            cleaned.includes("Cashier") ||
-            cleaned.includes("Oracle") ||
-            cleaned.includes("Rewards") ||
-            cleaned.includes("Transaction") ||
-            cleaned.includes("Display")
-        ) {
-            return;
-        }
-
         const match =
-        cleaned.match(
-            /^([A-Za-z\s]+?)\s+(\d+)\s+(\d+)/
-        );
+            line.match(
+                /^([A-Za-z\s]+?)\s+(\d+)\s+(\d+)/
+            );
 
         if (!match) return;
 
         const employee =
-        match[1].trim();
+            match[1].trim();
 
         const transactions =
-        parseInt(match[2]);
+            parseInt(match[2]);
 
         const rewards =
-        parseInt(match[3]);
+            parseInt(match[3]);
 
         if (
             employee.length < 3 ||
-            employee === "Total"
+            employee.toLowerCase().includes("total")
         ) {
             return;
         }
-
-        const percent =
-        transactions === 0
-            ? 0
-            : (
-                rewards /
-                transactions *
-                100
-            ).toFixed(1);
 
         importedRows.push({
             employee,
             transactions,
             rewards,
-            percent
+            percent:
+                transactions === 0
+                ? 0
+                : (
+                    rewards /
+                    transactions *
+                    100
+                  ).toFixed(1)
         });
 
     });
@@ -148,7 +186,7 @@ function renderResults() {
     importedRows.forEach(row => {
 
         const tr =
-        document.createElement("tr");
+            document.createElement("tr");
 
         tr.innerHTML = `
             <td>${row.employee}</td>
@@ -165,26 +203,36 @@ function renderResults() {
 
 saveBtn.addEventListener("click", () => {
 
+    if (!importedRows.length) {
+
+        alert(
+            "No employee data detected."
+        );
+
+        return;
+
+    }
+
     const reports =
-    JSON.parse(
-        localStorage.getItem("reports")
-    ) || [];
+        JSON.parse(
+            localStorage.getItem("reports")
+        ) || [];
 
     importedRows.forEach(row => {
 
         reports.push({
 
             employee:
-            row.employee,
+                row.employee,
 
             transactions:
-            row.transactions,
+                row.transactions,
 
             rewards:
-            row.rewards,
+                row.rewards,
 
             date:
-            reportDate.value
+                reportDate.value
 
         });
 
@@ -196,10 +244,10 @@ saveBtn.addEventListener("click", () => {
     );
 
     alert(
-        `${importedRows.length} reports imported successfully`
+        `${importedRows.length} reports imported`
     );
 
     window.location.href =
-    "dashboard.html";
+        "dashboard.html";
 
 });
