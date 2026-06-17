@@ -3,91 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports</title>
-
+    <title>Reports | Rewards Tracker</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Prevents layout flash on load before the script enforces server checks */
+        body { display: none; }
+    </style>
 </head>
 <body>
 
 <div class="layout">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
-
-        <div class="logo">Rewards Tracker</div>
+        <div class="logo">
+            <span class="logo-icon">📊</span> Rewards Tracker
+        </div>
 
         <nav>
             <a href="dashboard.html">Dashboard</a>
-            <a href="employees.html">Employees</a>
-            <a href="reports.html" class="active">Reports</a>
-            <a href="employee.html">Employee Profile</a>
+            <a href="reports.html" class="active">Daily Reports</a>
+            <a href="employees.html">Manage Employees</a>
+            <a href="employeeProfile.html">Employee Profile</a>
         </nav>
 
-        <button id="logoutBtn">Logout</button>
-
+        <button id="logoutBtn" class="btn-danger">Logout</button>
     </aside>
 
-    <!-- MAIN -->
     <main class="main">
 
         <header class="header">
-            <h1>Reports</h1>
-            <p class="subtext">Daily performance entries</p>
+            <h1>Daily Performance Reports</h1>
+            <p class="subtext">Log daily shift tallies or review historical entry records</p>
         </header>
 
-        <!-- ADD REPORT -->
         <section class="card">
+            <h2>Log New Shift Activity</h2>
+            <form id="reportForm" class="filter-row" style="gap: 16px; flex-wrap: wrap; align-items: flex-end;">
+                
+                <div class="field" style="margin-bottom: 0; min-width: 150px; flex: 1;">
+                    <label for="reportDate">Shift Date</label>
+                    <input type="date" id="reportDate" required>
+                </div>
 
-            <h2>Add Report</h2>
+                <div class="field" style="margin-bottom: 0; min-width: 180px; flex: 1;">
+                    <label for="employeeSelect">Cashier Identity</label>
+                    <select id="employeeSelect" required>
+                        <option value="">Select Employee...</option>
+                    </select>
+                </div>
 
-            <input type="date" id="reportDate">
+                <div class="field" style="margin-bottom: 0; min-width: 130px; flex: 1;">
+                    <label for="transactions">Customers Handled</label>
+                    <input type="number" id="transactions" placeholder="e.g., 45" min="0" required>
+                </div>
 
-            <select id="employeeSelect">
-                <option value="">Select Employee</option>
-            </select>
+                <div class="field" style="margin-bottom: 0; min-width: 130px; flex: 1;">
+                    <label for="rewards">Rewards Scans / Uses</label>
+                    <input type="number" id="rewards" placeholder="e.g., 25" min="0" required>
+                </div>
 
-            <input type="number" id="transactions" placeholder="Transactions">
-
-            <input type="number" id="rewards" placeholder="Rewards Used">
-
-            <button id="addReportBtn">Add Report</button>
-
+                <button type="submit" id="addReportBtn" class="btn-primary" style="height: 42px; min-width: 140px;">Submit Report</button>
+            </form>
         </section>
 
-        <!-- REPORT TABLE -->
         <section class="card">
-
-            <h2>All Reports</h2>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Employee</th>
-                        <th>Transactions</th>
-                        <th>Rewards</th>
-                        <th>%</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody id="reportTable"></tbody>
-
-            </table>
-
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                <h2 style="margin-bottom: 0;">All Historical Logs</h2>
+                <div id="adminControlsContainer"></div>
+            </div>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Employee Name</th>
+                            <th>Transactions</th>
+                            <th>Rewards Used</th>
+                            <th>Penetration %</th>
+                            <th id="actionsHeader" style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTable"></tbody>
+                </table>
+            </div>
         </section>
 
     </main>
-
 </div>
 
-<script src="reports.js"></script>
 <div class="mobile-nav">
     <a href="dashboard.html">📊<span>Dashboard</span></a>
-    <a href="reports.html">📝<span>Reports</span></a>
+    <a href="reports.html" class="active">📝<span>Reports</span></a>
     <a href="employees.html">👥<span>Employees</span></a>
-    <a href="ocr.html">📷<span>Upload</span></a>
+    <a href="employeeProfile.html">👤<span>Profile</span></a>
 </div>
 
+<script type="module" src="reports.js"></script>
 </body>
 </html>

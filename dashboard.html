@@ -3,188 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rewards Dashboard</title>
-
+    <title>Dashboard | Rewards Tracker</title>
     <link rel="stylesheet" href="style.css">
-
+    <style>
+        body { display: none; }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
 <div class="layout">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
-
         <div class="logo">
-            Rewards Tracker
+            <span class="logo-icon">📊</span> Rewards Tracker
         </div>
 
         <nav>
             <a href="dashboard.html" class="active">Dashboard</a>
-            <a href="employees.html">Employees</a>
-            <a href="reports.html">Reports</a>
-            <a href="employee.html">Employee Profile</a>
+            <a href="reports.html">Daily Reports</a>
+            <a href="employees.html">Manage Employees</a>
+            <a href="employeeProfile.html">Employee Profile</a>
         </nav>
 
-        <button id="logoutBtn">Logout</button>
-
+        <button id="logoutBtn" class="btn-danger">Logout</button>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main">
 
-        <!-- HEADER -->
         <header class="header">
-            <h1>Dashboard</h1>
-            <p class="subtext">Store performance overview</p>
+            <div>
+                <h1>Store Performance</h1>
+                <p class="subtext">Real-time overview of loyalty rewards penetration metrics</p>
+            </div>
         </header>
 
-        <!-- STATS -->
         <section class="stats">
-
             <div class="stat-card">
-                <h3>Store Avg</h3>
-                <p id="storeAverage">0%</p>
+                <h3>Store Avg Penetration</h3>
+                <p id="storeAverage" class="stat-value">0.0%</p>
             </div>
 
             <div class="stat-card">
-                <h3>Total Reports</h3>
-                <p id="totalReports">0</p>
+                <h3>Total Logged Reports</h3>
+                <p id="totalReports" class="stat-value">0</p>
             </div>
 
             <div class="stat-card">
-                <h3>Employees</h3>
-                <p id="employeeCount">0</p>
+                <h3>Active Cashiers</h3>
+                <p id="employeeCount" class="stat-value">0</p>
             </div>
 
             <div class="stat-card highlight">
                 <h3>Top Performer</h3>
-                <p id="topPerformer">N/A</p>
+                <p id="topPerformer" class="stat-value">N/A</p>
             </div>
-
         </section>
 
-        <!-- FILTERS -->
+        <section class="card" style="margin-bottom: 24px;">
+            <h2>📈 Performance Trends & Highlights (<span id="insightWeekLabel">Current Week</span>)</h2>
+            <div id="storeInsightsContainer" style="color: #334155; font-size: 15px;">
+                <p style="color: #64748b; font-style: italic;">Calculating current Sunday-to-Saturday metrics...</p>
+            </div>
+        </section>
+
         <section class="panel">
-
-            <h2>Filters</h2>
-
+            <h2>Analytics Filters & Actions</h2>
             <div class="filter-row">
-
                 <div class="field">
-                    <label>Range</label>
+                    <label for="rangeSelect">Date Range Window</label>
                     <select id="rangeSelect">
-                        <option value="all">All Time</option>
+                        <option value="all">All Time History</option>
                         <option value="7">Last 7 Days</option>
                         <option value="30">Last 30 Days</option>
                     </select>
                 </div>
 
-                <div class="field">
-                    <label>Goal (%)</label>
-                    <input type="number" id="goalInput" value="75">
-                </div>
+                <!-- Goal input removed from here -->
 
                 <div class="field actions">
-
-                    <button id="applyFilters">Apply</button>
-                    <button id="exportCSV">CSV</button>
-                    <button id="printReport">Print</button>
-
-                    <button id="openOCR" class="btn-primary">
-                        Upload OCR
-                    </button>
-
+                    <button id="applyFilters" class="btn-primary">Apply Filters</button>
+                    <button id="exportCSV" class="btn-secondary">Export to CSV</button>
+                    <button id="printReport" class="btn-dark">Print Scoreboard</button>
                 </div>
-
             </div>
-
         </section>
 
-        <!-- CHARTS -->
         <section class="grid">
-
             <div class="card">
-                <h2>Store Trend</h2>
-                <canvas id="trendChart"></canvas>
-            </div>
-
-            <div class="card">
-                <h2>Employee Comparison</h2>
-                <canvas id="employeeChart"></canvas>
-            </div>
-
-        </section>
-
-        <!-- PRINT REPORT TEMPLATE -->
-        <div id="printSection" class="print-only">
-
-            <div class="print-header">
-
-                <h1>🏆 Weekly Performance Scoreboard</h1>
-
-                <p id="printDateRange"></p>
-
-                <div class="print-summary">
-
-                    <div>
-                        <h3>Store Average</h3>
-                        <p id="printStoreAvg">0%</p>
-                    </div>
-
-                    <div>
-                        <h3>Total Entries</h3>
-                        <p id="printTotalReports">0</p>
-                    </div>
-
-                    <div>
-                        <h3>Top Performer</h3>
-                        <p id="printTopPerformer">N/A</p>
-                    </div>
-
+                <h2>Historical Penetration Trend</h2>
+                <div class="chart-container" style="position: relative; height:300px; width:100%;">
+                    <canvas id="trendChart"></canvas>
                 </div>
-
             </div>
 
-            <hr>
-
-            <h2>📊 Leaderboard</h2>
-
-            <table class="print-table">
-
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Employee</th>
-                        <th>Transactions</th>
-                        <th>Rewards</th>
-                        <th>Performance %</th>
-                    </tr>
-                </thead>
-
-                <tbody id="printTable"></tbody>
-
-            </table>
-
-            <div class="print-footer">
-                <p>Generated automatically from Rewards Tracker System</p>
+            <div class="card">
+                <h2>Employee Head-to-Head Comparison</h2>
+                <div class="chart-container" style="position: relative; height:300px; width:100%;">
+                    <canvas id="employeeChart"></canvas>
+                </div>
             </div>
-
-        </div>
+        </section>
 
     </main>
-
 </div>
 
-<script src="dashboard.js"></script>
 <div class="mobile-nav">
-    <a href="dashboard.html">📊<span>Dashboard</span></a>
+    <a href="dashboard.html" class="active">📊<span>Dashboard</span></a>
     <a href="reports.html">📝<span>Reports</span></a>
-    <a href="employees.html">👥<span>Add Employee</span></a>
-    <a href="employee.html">Employee Profile</a>
-    <a href="ocr.html">📷<span>Upload</span></a>
+    <a href="employees.html">👥<span>Employees</span></a>
+    <a href="employeeProfile.html">👤<span>Profile</span></a>
 </div>
 
+<script type="module" src="dashboard.js"></script>
 </body>
 </html>

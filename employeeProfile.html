@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Profile | Rewards Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .filter-card { background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-items: flex-end; }
+        .field-group { display: flex; flex-direction: column; gap: 6px; }
+        .field-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .field-group select, .field-group input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; font-size: 0.9rem; cursor: pointer; }
+        .comp-val { font-size: 0.85rem; color: #f97316; font-weight: 600; display: block; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="logo"><span class="logo-icon">📊</span> Rewards Tracker</div>
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="reports.html">Daily Reports</a>
+            <a href="employees.html">Manage Employees</a>
+            <a href="employeeProfile.html" class="active">Employee Profile</a>
+        </nav>
+        <button id="logoutBtn" class="btn-danger">Logout</button>
+    </aside>
+
+    <main class="main">
+        <header class="header">
+            <h1>Employee Performance Analytics</h1>
+        </header>
+
+        <div class="filter-card">
+            <div class="field-group">
+                <label for="primaryEmployee">Primary Employee</label>
+                <select id="primaryEmployee"></select>
+            </div>
+            <div class="field-group">
+                <label class="checkbox-group"><input type="checkbox" id="compareToggle"> Compare Mode</label>
+            </div>
+            <div class="field-group" id="secondaryEmployeeWrapper" style="display: none;">
+                <label for="secondaryEmployee">Compare With</label>
+                <select id="secondaryEmployee"></select>
+            </div>
+            <div class="field-group">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="field-group">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+
+        <section class="stats">
+            <div class="stat-card"><h3>Penetration Rate</h3><p id="metricPen" class="stat-value">0.0%</p><span id="compPen" class="comp-val"></span></div>
+            <div class="stat-card"><h3>Total Transactions</h3><p id="metricTx" class="stat-value">0</p><span id="compTx" class="comp-val"></span></div>
+            <div class="stat-card"><h3>Total Rewards</h3><p id="metricReg" class="stat-value">0</p><span id="compReg" class="comp-val"></span></div>
+        </section>
+
+        <section id="insightSection" class="card" style="margin-bottom: 24px; border-left: 4px solid #2563eb; display: none;">
+            <h2>Performance Insight</h2>
+            <p id="insightText" style="color: #475569; line-height: 1.6;"></p>
+            <p id="compareInsightText" style="color: #ea580c; line-height: 1.6; font-weight: 500; margin-top: 10px;"></p>
+        </section>
+
+        <section class="card" style="margin-bottom: 24px;">
+            <h2>Historical Penetration Trend</h2>
+            <div style="height: 300px;"><canvas id="employeeTrendChart"></canvas></div>
+        </section>
+
+        <section class="card">
+            <h2>Complete Historical Shift Logs</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Date</th><th>Transactions</th><th>Signups</th><th>Penetration %</th></tr></thead>
+                    <tbody id="reportTable"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+<script type="module" src="employeeProfile.js"></script>
+</body>
+</html>

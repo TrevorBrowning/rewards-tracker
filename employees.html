@@ -3,86 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employees</title>
-
+    <title>Manage Employees | Rewards Tracker</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Hidden by default; JavaScript reveals it only if authenticated as Admin or Manager */
+        #adminOnboardPanel { display: none; }
+        body { display: none; }
+    </style>
 </head>
 <body>
 
 <div class="layout">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
-
         <div class="logo">
-            Rewards Tracker
+            <span class="logo-icon">📊</span> Rewards Tracker
         </div>
 
         <nav>
             <a href="dashboard.html">Dashboard</a>
-            <a href="employees.html" class="active">Employees</a>
-            <a href="reports.html">Reports</a>
-            <a href="employee.html">Employee Profile</a>
+            <a href="reports.html">Daily Reports</a>
+            <a href="employees.html" class="active">Manage Employees</a>
+            <a href="employeeProfile.html">Employee Profile</a>
         </nav>
 
-        <button id="logoutBtn">Logout</button>
-
+        <button id="logoutBtn" class="btn-danger">Logout</button>
     </aside>
 
-    <!-- MAIN -->
     <main class="main">
 
         <header class="header">
-            <h1>Employees</h1>
-            <p class="subtext">Manage store team members</p>
+            <h1>Manage Employees</h1>
+            <p class="subtext">Onboard new personnel or review and modify the active staff directory roster</p>
         </header>
 
-        <!-- ADD EMPLOYEE -->
-        <section class="card">
-
-            <h2>Add Employee</h2>
-
-            <input
-                type="text"
-                id="employeeName"
-                placeholder="Enter employee name"
-            />
-
-            <button id="addEmployeeBtn">
-                Add Employee
-            </button>
-
+        <!-- ONBOARD PANEL (MANAGEMENT LOCKED) -->
+        <section id="adminOnboardPanel" class="panel" style="margin-bottom: 24px;">
+            <h2>Onboard New Staff Member</h2>
+            <form id="addEmployeeForm" class="filter-row" style="align-items: flex-end; gap: 16px;">
+                <div class="field" style="max-width: 400px; flex: 1; margin-bottom: 0;">
+                    <label for="newEmployeeName">Full Legal or Preferred Name</label>
+                    <input type="text" id="newEmployeeName" placeholder="e.g., Jane Doe" required autocomplete="off">
+                </div>
+                <button type="submit" class="btn-primary" style="height: 42px;">Add Employee</button>
+            </form>
         </section>
 
-        <!-- EMPLOYEE LIST -->
         <section class="card">
-
-            <h2>Employee List</h2>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody id="employeeTable"></tbody>
-
-            </table>
-
+            <h2>Active Personnel Roster Directory</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Employee Name</th>
+                            <th>Total Logged Career Shifts</th>
+                            <th id="actionsHeader" style="text-align: right;">Directory Management Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeRosterTable"></tbody>
+                </table>
+            </div>
         </section>
 
     </main>
-
 </div>
 
-<script src="employees.js"></script>
 <div class="mobile-nav">
     <a href="dashboard.html">📊<span>Dashboard</span></a>
     <a href="reports.html">📝<span>Reports</span></a>
-    <a href="employees.html">👥<span>Employees</span></a>
-    <a href="ocr.html">📷<span>Upload</span></a>
+    <a href="employees.html" class="active">👥<span>Employees</span></a>
+    <a href="employeeProfile.html">👤<span>Profile</span></a>
 </div>
+
+<script type="module" src="employees.js"></script>
 </body>
 </html>
