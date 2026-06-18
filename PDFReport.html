@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Management Performance Report</title>
+    <style>
+        body { background: #f8fafc; padding: 20px; font-family: -apple-system, sans-serif; }
+        .report { max-width: 950px; margin: auto; background: white; padding: 40px; border-radius: 16px; border: 1px solid #e2e8f0; }
+        .controls { text-align: center; margin-bottom: 20px; }
+        .controls button { padding: 10px 20px; cursor: pointer; border-radius: 6px; border: none; background: #2563eb; color: white; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 20px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: #f8fafc; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; }
+        .stat-card h3 { font-size: 10px; text-transform: uppercase; color: #64748b; margin: 0; }
+        .stat-card p { font-size: 18px; font-weight: 700; margin: 5px 0 0 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f1f5f9; text-align: left; padding: 10px; font-size: 11px; text-transform: uppercase; }
+        td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+        .trend-up { color: #166534; } .trend-down { color: #991b1b; }
+        #analysis { margin-bottom: 20px; padding: 15px; background: #f1f5f9; border-radius: 8px; font-size: 14px; color: #334155; }
+        @media print { .no-print { display: none; } body { background: white; padding: 0; } }
+    </style>
+</head>
+<body>
+    <div class="no-print controls"><button onclick="window.print()">🖨️ Print / Save PDF</button></div>
+    
+    <div class="report">
+        <div class="header">
+            <div><h1 style="margin:0;">Weekly Management Summary</h1><p id="dateRange"></p></div>
+            <div style="text-align:right;"><strong>Rewards Tracker</strong></div>
+        </div>
+        
+        <div id="summary" class="stat-grid"></div>
+        
+        <div id="analysis"></div>
+        
+        <h3>Daily Performance Variance</h3>
+        <table id="dailyTable">
+            <thead><tr><th>Day</th><th>Txns</th><th>Signups</th><th>Rate</th></tr></thead>
+            <tbody id="dailyBody"></tbody>
+        </table>
+
+        <h3>Employee Performance & Consistency</h3>
+        <table id="empTable">
+            <thead><tr><th>Employee</th><th>Txns</th><th>Signups</th><th>Current %</th><th>Prev %</th><th>Trend</th></tr></thead>
+            <tbody id="empBody"></tbody>
+        </table>
+    </div>
+    
+    <script type="module" src="PDFReport.js"></script>
+</body>
+</html>

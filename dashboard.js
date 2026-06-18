@@ -1,12 +1,11 @@
-// dashboard.js
 import { auth, db, GLOBAL_STORE_GOAL } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-
 let reports = [];
 let trendChart = null;
 let employeeChart = null;
+
 
 
 onAuthStateChanged(auth, (user) => {
@@ -14,159 +13,310 @@ onAuthStateChanged(auth, (user) => {
         localStorage.removeItem("dashboardGoal");
         window.location.href = "index.html";
     } else {
-        // Enforce global static benchmark configuration cleanly
         localStorage.setItem("dashboardGoal", GLOBAL_STORE_GOAL);
-        
-        // Show layout surface securely
         document.body.style.display = "block";
-        
-        // Initialize listener
         initializeDatabaseListener();
     }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("applyFilters")?.addEventListener("click", () => {
-        buildDashboard();
-    });
-    
+
+    document.getElementById("applyFilters")?.addEventListener("click", buildDashboard);
+
     document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-        try {
-            await signOut(auth);
-            window.location.href = "index.html";
-        } catch (error) {
-            console.error("Error signing out user session:", error);
-        }
+        await signOut(auth);
+        window.location.href = "index.html";
     });
 
     document.getElementById("exportCSV")?.addEventListener("click", () => {
-        const data = getFilteredReports();
-        downloadCSV(data);
+        downloadCSV(getFilteredReports());
     });
 
-    document.getElementById("printReport")?.addEventListener("click", executePrintScoreboard);
+    document.getElementById("printReport")?.addEventListener("click", () => {
+        window.open("print.html", "_blank");
+    });
+    document.getElementById("pdfReportBtn")?.addEventListener("click", () => {
+        const dateValue = document.getElementById("weekPicker")?.value;
+
+        const date = dateValue || new Date().toISOString().split('T')[0];
+        window.open(`PDFReport.html?date=${date}`, "_blank");
+    });
 });
 
+
+
 function initializeDatabaseListener() {
-    onSnapshot(collection(db, "reports"), (querySnapshot) => {
-        reports = [];
-        querySnapshot.forEach((doc) => {
-            reports.push(doc.data());
-        });
-        
+    onSnapshot(collection(db, "reports"), (snapshot) => {
+        reports = snapshot.docs.map(d => d.data());
         buildDashboard();
-    }, (error) => {
-        console.error("Live firestore synchronization failed:", error);
     });
 }
 
 
+
+function parseDateSafe(dateStr) {
+    if (!dateStr) return null;
+    return new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00");
+}
+
+
+
+function getWeekBounds(date) {
+    const d = new Date(date);
+
+    const sunday = new Date(d);
+    sunday.setDate(d.getDate() - d.getDay());
+    sunday.setHours(0, 0, 0, 0);
+
+    const saturday = new Date(sunday);
+    saturday.setDate(sunday.getDate() + 6);
+    saturday.setHours(23, 59, 59, 999);
+
+    return { start: sunday, end: saturday };
+}
+
+function getWeekReports(baseDate) {
+    const { start, end } = getWeekBounds(baseDate);
+
+    return reports.filter(r => {
+        const d = parseDateSafe(r.date);
+        return d && d >= start && d <= end;
+    });
+}
+
+
+
 function getFilteredReports() {
-    const rangeSelect = document.getElementById("rangeSelect");
-    const range = rangeSelect?.value || "all";
+    const val = document.getElementById("rangeSelect")?.value || "week";
 
-    if (range === "all") return reports;
+    // CURRENT WEEK (DEFAULT)
+    if (val === "week") {
+        return getWeekReports(new Date());
+    }
 
-    const days = parseInt(range, 10);
-    if (isNaN(days)) return reports;
+    if (val === "all") {
+        return reports;
+    }
+
+    const days = parseInt(val, 10);
+    if (isNaN(days)) {
+        return getWeekReports(new Date());
+    }
 
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
     cutoff.setDate(cutoff.getDate() - days);
 
-    return reports.filter(report => {
-        const reportDate = new Date(report.date);
-        return !isNaN(reportDate) && reportDate >= cutoff;
+    return reports.filter(r => {
+        const d = parseDateSafe(r.date);
+        return d && d >= cutoff;
     });
-}
-
-
-function calculatePercent(transactions, rewards) {
-    const t = Number(transactions) || 0;
-    const r = Number(rewards) || 0;
-    return t === 0 ? 0 : (r / t) * 100;
 }
 
 
 function buildDashboard() {
-    const filteredData = getFilteredReports();
-    
+
+    const data = getFilteredReports();
+
     const storeAverageEl = document.getElementById("storeAverage");
-    const totalReportsEl = document.getElementById("totalReports");
-    const employeeCountEl = document.getElementById("employeeCount");
-    const topPerformerEl = document.getElementById("topPerformer");
+    const avgChangeEl = document.getElementById("avgChange");
+    const txnChangeEl = document.getElementById("txnChange");
+    const topEl = document.getElementById("topPerformer");
 
-    const activeEmployeesList = [...new Set(reports.map(r => r.employee))];
+    const currentWeek = getWeekReports(new Date());
+    const lastWeek = getWeekReports(new Date(Date.now() - 7 * 86400000));
 
-    if (employeeCountEl) {
-        employeeCountEl.textContent = activeEmployeesList.length.toString();
-    }
-    if (totalReportsEl) {
-        totalReportsEl.textContent = filteredData.length.toString();
-    }
+    const cur = computeWeek(currentWeek);
+    const prev = computeWeek(lastWeek);
 
-    generateStoreInsights(GLOBAL_STORE_GOAL);
 
-    if (!filteredData.length) {
-        if (storeAverageEl) storeAverageEl.textContent = "0.0%";
-        if (topPerformerEl) topPerformerEl.textContent = "N/A";
-        clearChartsOnEmpty();
-        return;
-    }
+    const storeAvg = data.length
+        ? (data.reduce((a, b) => a + (+b.rewards || 0), 0) /
+           data.reduce((a, b) => a + (+b.transactions || 0), 0)) * 100
+        : 0;
 
-    let totalTransactions = 0;
-    let totalRewards = 0;
-
-    const dailyMap = {};
-    const empStats = {};
-
-    filteredData.forEach(report => {
-        const t = Number(report.transactions) || 0;
-        const r = Number(report.rewards) || 0;
-
-        totalTransactions += t;
-        totalRewards += r;
-
-        if (!dailyMap[report.date]) {
-            dailyMap[report.date] = { totalT: 0, totalR: 0 };
-        }
-        dailyMap[report.date].totalT += t;
-        dailyMap[report.date].totalR += r;
-
-        if (!empStats[report.employee]) {
-            empStats[report.employee] = { t: 0, r: 0 };
-        }
-        empStats[report.employee].t += t;
-        empStats[report.employee].r += r;
-    });
-
-    const storeAvg = totalTransactions === 0 ? 0 : (totalRewards / totalTransactions) * 100;
     if (storeAverageEl) {
         storeAverageEl.textContent = storeAvg.toFixed(1) + "%";
     }
 
-    let topEmployeeName = "N/A";
-    let topEmployeePercentage = -1;
 
-    Object.keys(empStats).forEach(name => {
-        const stats = empStats[name];
-        const rate = stats.t === 0 ? 0 : (stats.r / stats.t) * 100;
+    const diffAvg = cur.avg - prev.avg;
+    const diffTxn = cur.transactions - prev.transactions;
 
-        if (rate > topEmployeePercentage) {
-            topEmployeePercentage = rate;
-            topEmployeeName = `${name} (${rate.toFixed(1)}%)`;
-        }
-    });
-    if (topPerformerEl) {
-        topPerformerEl.textContent = topEmployeeName;
+    if (avgChangeEl) {
+        avgChangeEl.textContent =
+            `${cur.avg.toFixed(1)}% (${diffAvg >= 0 ? "+" : ""}${diffAvg.toFixed(1)}%)`;
     }
 
-    renderTrendChart(dailyMap, GLOBAL_STORE_GOAL);
-    renderEmployeeChart(empStats);
+    if (txnChangeEl) {
+        txnChangeEl.textContent =
+            `${cur.transactions} txns (${diffTxn >= 0 ? "+" : ""}${diffTxn}) vs last week`;
+    }
+
+    /* TOP PERFORMER */
+    const emp = buildEmployeeStats(data);
+
+    let best = "N/A";
+    let bestScore = -1;
+
+    Object.entries(emp).forEach(([name, v]) => {
+        const rate = v.t ? (v.r / v.t) * 100 : 0;
+        if (rate > bestScore) {
+            bestScore = rate;
+            best = `${name} (${rate.toFixed(1)}%)`;
+        }
+    });
+
+    if (topEl) topEl.textContent = best;
+
+    /* WEEK SUMMARY */
+    document.getElementById("weekTransactions").textContent = cur.transactions;
+    document.getElementById("weekReportsSmall").textContent = currentWeek.length;
+
+    /* CHARTS */
+    renderTrendChart(data);
+    renderEmployeeChart(emp);
+    generateStoreInsights();
+    updateGoalProgressBar(cur.avg);
 }
 
 
-function generateStoreInsights(currentTargetGoal) {
+
+function computeWeek(arr) {
+    let t = 0;
+    let r = 0;
+
+    arr.forEach(x => {
+        t += +x.transactions || 0;
+        r += +x.rewards || 0;
+    });
+
+    return {
+        transactions: t,
+        rewards: r,
+        avg: t ? (r / t) * 100 : 0
+    };
+}
+
+
+
+function buildEmployeeStats(data) {
+    const map = {};
+
+    data.forEach(r => {
+        if (!map[r.employee]) map[r.employee] = { t: 0, r: 0 };
+        map[r.employee].t += +r.transactions || 0;
+        map[r.employee].r += +r.rewards || 0;
+    });
+
+    return map;
+}
+
+
+function renderTrendChart(data) {
+
+    const canvas = document.getElementById("trendChart");
+    if (!canvas) return;
+
+    const daily = {};
+
+    data.forEach(r => {
+        const d = parseDateSafe(r.date);
+        if (!d) return;
+
+        const key = d.toISOString().split("T")[0];
+
+        if (!daily[key]) daily[key] = { t: 0, r: 0 };
+
+        daily[key].t += +r.transactions || 0;
+        daily[key].r += +r.rewards || 0;
+    });
+
+    const keys = Object.keys(daily).sort();
+
+    const values = keys.map(k => {
+        const x = daily[k];
+        return x.t ? ((x.r / x.t) * 100).toFixed(1) : 0;
+    });
+
+    if (trendChart) trendChart.destroy();
+
+    trendChart = new Chart(canvas, {
+        type: "line",
+        data: {
+            labels: keys,
+            datasets: [{
+                label: "Performance %",
+                data: values,
+                borderColor: "#2563eb",
+                fill: true,
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function renderEmployeeChart(emp) {
+
+    const canvas = document.getElementById("employeeChart");
+    if (!canvas) return;
+
+    const names = Object.keys(emp);
+    const values = names.map(n =>
+        emp[n].t ? ((emp[n].r / emp[n].t) * 100) : 0
+    );
+
+    if (employeeChart) employeeChart.destroy();
+
+    employeeChart = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: names,
+            datasets: [{
+                data: values,
+                backgroundColor: "#475569"
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+/* ---------------- CSV EXPORT ---------------- */
+
+function downloadCSV(data) {
+
+    if (!data.length) return alert("No data");
+
+    let csv = "Date,Employee,Transactions,Rewards,Rate\n";
+
+    data.forEach(r => {
+        const rate = r.transactions
+            ? (r.rewards / r.transactions) * 100
+            : 0;
+
+        csv += `${r.date},${r.employee},${r.transactions},${r.rewards},${rate.toFixed(1)}%\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "report.csv";
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+function generateStoreInsights() {
+    const currentTargetGoal = GLOBAL_STORE_GOAL || 0;
     const insightsContainer = document.getElementById("storeInsightsContainer");
     const weekLabel = document.getElementById("insightWeekLabel");
     if (!insightsContainer) return;
@@ -253,157 +403,29 @@ function generateStoreInsights(currentTargetGoal) {
     `;
 }
 
-// --- VISUAL GRAPH ENGINE SYSTEM CHARTS RENDERERS ---
-function renderTrendChart(dailyMap, currentTargetGoal) {
-    const trendCanvas = document.getElementById("trendChart");
-    if (!trendCanvas) return;
+function updateGoalProgressBar(weeklyAvg) {
 
-    const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a) - new Date(b));
-    const trendPoints = sortedDates.map(date => {
-        const day = dailyMap[date];
-        return day.totalT === 0 ? 0 : ((day.totalR / day.totalT) * 100).toFixed(1);
-    });
+    const goal = GLOBAL_STORE_GOAL || 0;
 
-    const goalLineData = sortedDates.map(() => currentTargetGoal);
+    const bar = document.getElementById("goalProgressBar");
+    const label = document.getElementById("goalPercentLabel");
+    const target = document.getElementById("goalTargetLabel");
 
-    if (trendChart) trendChart.destroy();
+    if (!bar || !label || !target) return;
 
-    const ctx = trendCanvas.getContext("2d");
-    let fillGradient = null;
-    if (ctx) {
-        fillGradient = ctx.createLinearGradient(0, 0, 0, 200);
-        fillGradient.addColorStop(0, "rgba(37, 99, 235, 0.15)");
-        fillGradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    }
+    const percent = Math.min(weeklyAvg, 100);
 
-    trendChart = new Chart(trendCanvas, {
-        type: "line",
-        data: {
-            labels: sortedDates.map(d => {
-                const parts = d.split('-');
-                return parts.length === 3 ? `${parts[1]}/${parts[2]}` : d;
-            }),
-            datasets: [
-                {
-                    label: "Store Performance %",
-                    data: trendPoints,
-                    borderColor: "#2563eb",
-                    backgroundColor: fillGradient || "transparent",
-                    borderWidth: 3,
-                    tension: 0.2,
-                    fill: true,
-                    pointBackgroundColor: "#2563eb",
-                    pointRadius: 4
-                },
-                {
-                    label: `Store Goal (${currentTargetGoal}%)`,
-                    data: goalLineData,
-                    borderColor: "#ef4444",
-                    borderWidth: 2,
-                    borderDash: [6, 6],
-                    pointRadius: 0,
-                    fill: false
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: "top", labels: { boxWidth: 12, font: { weight: 600 } } }
-            },
-            scales: {
-                y: { min: 0, max: 100, grid: { color: "#f1f5f9" }, ticks: { callback: v => v + "%" } },
-                x: { grid: { display: false } }
-            }
-        }
-    });
-}
+    bar.style.width = percent + "%";
+    label.textContent = weeklyAvg.toFixed(1) + "%";
+    target.textContent = goal + "%";
 
-function renderEmployeeChart(empStats) {
-    const empCanvas = document.getElementById("employeeChart");
-    if (!empCanvas) return;
-
-    const sortedEmployees = Object.keys(empStats).sort((a, b) => {
-        const rateA = empStats[a].t === 0 ? 0 : empStats[a].r / empStats[a].t;
-        const rateB = empStats[b].t === 0 ? 0 : empStats[b].r / empStats[b].t;
-        return rateB - rateA;
-    });
-
-    const labelNames = [];
-    const statisticalRates = [];
-
-    sortedEmployees.forEach(name => {
-        const item = empStats[name];
-        labelNames.push(name);
-        statisticalRates.push(((item.r / item.t) * 100 || 0).toFixed(1));
-    });
-
-    if (employeeChart) employeeChart.destroy();
-
-    employeeChart = new Chart(empCanvas, {
-        type: "bar",
-        data: {
-            labels: labelNames,
-            datasets: [{
-                label: "Cashier Score Rate %",
-                data: statisticalRates,
-                backgroundColor: "#475569",
-                hoverBackgroundColor: "#0f172a",
-                borderRadius: 6,
-                barThickness: 24
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: { min: 0, max: 100, grid: { color: "#f1f5f9" }, ticks: { callback: v => v + "%" } },
-                x: { grid: { display: false } }
-            }
-        }
-    });
-}
-
-
-function clearChartsOnEmpty() {
-    if (trendChart) { trendChart.destroy(); trendChart = null; }
-    if (employeeChart) { employeeChart.destroy(); employeeChart = null; }
-}
-
-function executePrintScoreboard() {
-    const printWindow = window.open("print.html", "_blank");
-    if (!printWindow) {
-        alert("Pop-up blocked! Please allow pop-ups for this site to view the printable scoreboard.");
+    // color logic
+    if (weeklyAvg >= goal) {
+        bar.style.background = "#22c55e"; // green
+    } else if (weeklyAvg >= goal * 0.85) {
+        bar.style.background = "#f59e0b"; // amber
+    } else {
+        bar.style.background = "#ef4444"; // red
     }
 }
 
-function downloadCSV(dataset) {
-    if (!dataset.length) {
-        alert("No target logs matched the active parameters for export extraction.");
-        return;
-    }
-
-    let csvOutputBody = "Data Record Date,Cashier Identity,Transactions Handled,Rewards Signups,Penetration Rate %\n";
-
-    dataset.forEach(row => {
-        const rate = calculatePercent(row.transactions, row.rewards).toFixed(1);
-        csvOutputBody += `"${row.date}","${row.employee.replace(/"/g, '""')}",${row.transactions},${row.rewards},${rate}%\n`;
-    });
-
-    const fileBlob = new Blob([csvOutputBody], { type: "text/csv;charset=utf-8;" });
-    const localBlobUrl = URL.createObjectURL(fileBlob);
-    
-    const virtualLinkElement = document.createElement("a");
-    virtualLinkElement.href = localBlobUrl;
-    virtualLinkElement.download = `Store_Rewards_Extract_${new Date().toISOString().split('T')[0]}.csv`;
-    
-    document.body.appendChild(virtualLinkElement);
-    virtualLinkElement.click();
-    
-    document.body.removeChild(virtualLinkElement);
-    URL.revokeObjectURL(localBlobUrl);
-}

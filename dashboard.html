@@ -6,11 +6,32 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <title>Dashboard | Rewards Tracker</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         body { display: none; }
+
+        .chart-meta {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0 18px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .mini-pill {
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-weight: 600;
+            color: #334155;
+        }
     </style>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
 <div class="layout">
@@ -39,71 +60,113 @@
             </div>
         </header>
 
+       
         <section class="stats">
+
             <div class="stat-card">
                 <h3>Store Avg Penetration</h3>
                 <p id="storeAverage" class="stat-value">0.0%</p>
             </div>
 
-            <div class="stat-card">
-                <h3>Total Logged Reports</h3>
-                <p id="totalReports" class="stat-value">0</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>Active Cashiers</h3>
-                <p id="employeeCount" class="stat-value">0</p>
+            <div class="stat-card highlight">
+                <h3>Weekly Shift vs Last Week</h3>
+                <p id="avgChange" class="stat-value">0.0%</p>
+                <p id="txnChange" style="margin-top:6px;font-size:13px;color:#64748b;">
+                    0 txns vs last week
+                </p>
             </div>
 
             <div class="stat-card highlight">
                 <h3>Top Performer</h3>
                 <p id="topPerformer" class="stat-value">N/A</p>
             </div>
+
         </section>
 
-        <section class="card" style="margin-bottom: 24px;">
-            <h2>📈 Performance Trends & Highlights (<span id="insightWeekLabel">Current Week</span>)</h2>
-            <div id="storeInsightsContainer" style="color: #334155; font-size: 15px;">
-                <p style="color: #64748b; font-style: italic;">Calculating current Sunday-to-Saturday metrics...</p>
+
+        <section class="card" style="margin-bottom: 18px;">
+            <h2>📈 Performance Trends (<span id="insightWeekLabel">Current Week</span>)</h2>
+            <div id="storeInsightsContainer" style="color:#334155;font-size:15px;">
+                <p style="color:#64748b;font-style:italic;">
+                    Loading current week metrics...
+                </p>
             </div>
+            <div style="margin-top:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:#64748b;margin-bottom:6px;">
+                <span>Goal Progress</span>
+                <span id="goalPercentLabel">0%</span>
+            </div>
+
+            <div style="width:100%;height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
+                <div id="goalProgressBar"
+                    style="height:100%;width:0%;background:#2563eb;transition:width 0.4s ease;">
+                </div>
+            </div>
+
+            <div style="margin-top:6px;font-size:12px;color:#94a3b8;">
+                Target: <span id="goalTargetLabel">0%</span>
+            </div>
+        </div>
         </section>
 
+     
         <section class="panel">
-            <h2>Analytics Filters & Actions</h2>
-            <div class="filter-row">
-                <div class="field">
-                    <label for="rangeSelect">Date Range Window</label>
-                    <select id="rangeSelect">
-                        <option value="all">All Time History</option>
-                        <option value="7">Last 7 Days</option>
-                        <option value="30">Last 30 Days</option>
-                    </select>
-                </div>
+    <h2>Analytics Filters & Actions</h2>
 
-                <!-- Goal input removed from here -->
+    <div class="filter-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+        
+        <div class="field">
+            <label for="rangeSelect">Date Range Window</label>
+            <select id="rangeSelect" class="input-field">
+                <option value="week" selected>Current Week (Sun–Sat)</option>
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+                <option value="all">All Time History</option>
+            </select>
+        </div>
 
-                <div class="field actions">
-                    <button id="applyFilters" class="btn-primary">Apply Filters</button>
-                    <button id="exportCSV" class="btn-secondary">Export to CSV</button>
-                    <button id="printReport" class="btn-dark">Print Scoreboard</button>
-                </div>
-            </div>
-        </section>
+        <div class="field">
+            <label for="weekPicker">Select Report Week</label>
+            <input type="date" id="weekPicker" class="input-field">
+        </div>
 
+        <div class="field actions" style="display: flex; gap: 8px;">
+            <button id="applyFilters" class="btn-primary">Apply Filters</button>
+            <button id="exportCSV" class="btn-secondary">Export to CSV</button>
+        </div>
+    </div>
+
+    <div class="filter-row" style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 20px; display: flex; gap: 10px;">
+        <button id="printReport" class="btn-dark">Print Dashboard</button>
+        <button id="pdfReportBtn" class="btn-dark">
+            Generate Weekly PDF
+        </button>
+    </div>
+</section>
+
+  
+        <div class="chart-meta">
+            <div class="mini-pill">📊 Week Txns: <span id="weekTransactions">0</span></div>
+            <div class="mini-pill">🧾 Reports: <span id="weekReportsSmall">0</span></div>
+        </div>
+
+ 
         <section class="grid">
+
             <div class="card">
                 <h2>Historical Penetration Trend</h2>
-                <div class="chart-container" style="position: relative; height:300px; width:100%;">
+                <div class="chart-container" style="position:relative;height:300px;">
                     <canvas id="trendChart"></canvas>
                 </div>
             </div>
 
             <div class="card">
-                <h2>Employee Head-to-Head Comparison</h2>
-                <div class="chart-container" style="position: relative; height:300px; width:100%;">
+                <h2>Employee Comparison</h2>
+                <div class="chart-container" style="position:relative;height:300px;">
                     <canvas id="employeeChart"></canvas>
                 </div>
             </div>
+
         </section>
 
     </main>
@@ -117,5 +180,11 @@
 </div>
 
 <script type="module" src="dashboard.js"></script>
+<script>
+
+document.getElementById('weekPicker').addEventListener('change', (e) => {
+    document.getElementById('pdfReportBtn').href = `PDFReport.html?date=${e.target.value}`;
+});
+</script>
 </body>
 </html>
